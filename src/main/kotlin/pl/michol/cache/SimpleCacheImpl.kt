@@ -4,8 +4,6 @@ import pl.michol.cache.models.SimpleCacheEntry
 import pl.michol.cache.models.SimpleCacheLinkedHashMap
 import java.time.LocalDateTime
 import java.util.*
-import java.util.LinkedHashMap
-
 
 
 class SimpleCacheImpl<K, V> {
@@ -13,9 +11,41 @@ class SimpleCacheImpl<K, V> {
     private val timeToLive: Long
     private val cache: SimpleCacheLinkedHashMap<K, SimpleCacheEntry<V>>
 
+    /**
+     * timeToLive - time of entry present in cache in sec
+     * cleanUpInterval - interval of entries cleanup in sec
+     * maxEntries - max size of cache
+     */
+    constructor(timeToLive: Long, cleanUpInterval: Long, maxEntries: Int) {
+        this.timeToLive = timeToLive
+        this.cache = SimpleCacheLinkedHashMap(16, .75f, true, maxEntries)
+
+        runCleanupThread(cleanUpInterval)
+    }
+
+    /**
+     * no cleanup eldest entries
+     * timeToLive - time of entry present in cache in sec
+     * maxEntries - max size of cache
+     */
     constructor(timeToLive: Long, maxEntries: Int) {
         this.timeToLive = timeToLive
         this.cache = SimpleCacheLinkedHashMap(16, .75f, true, maxEntries)
+    }
+
+    /**
+     * create new thread to clean up entries thad has expired
+     */
+    private fun runCleanupThread(cleanUpInterval: Long) {
+        if (timeToLive > 0) {
+            val cleanUpThread = Thread(Runnable {
+                while (true) {
+                    Thread.sleep(cleanUpInterval * 1000)
+                    cleanUpEntries()
+                }
+            })
+            cleanUpThread.start()
+        }
     }
 
     /**
@@ -23,10 +53,12 @@ class SimpleCacheImpl<K, V> {
      * return null if key is not present
      */
     fun getCacheEntry(key: K): V? {
-        if (cache.containsKey(key)) {
-            return cache[key]!!.value
+        synchronized(cache) {
+            if (cache.containsKey(key)) {
+                return cache[key]!!.value
+            }
+            return null
         }
-        return null
     }
 
     /**
@@ -35,19 +67,23 @@ class SimpleCacheImpl<K, V> {
      * if not present add new value
      */
     fun putCacheEntry(key: K, value: V) {
-        if (cache.containsKey(key)) {
-            cache.computeIfPresent(key, { _, u -> u.creationTime = LocalDateTime.now(); u.value = value; u })
-        } else {
-            cache.putIfAbsent(key, SimpleCacheEntry(LocalDateTime.now(), value))
+        synchronized(cache) {
+            if (cache.containsKey(key)) {
+                cache.computeIfPresent(key, { _, u -> u.creationTime = LocalDateTime.now(); u.value = value; u })
+            } else {
+                cache.putIfAbsent(key, SimpleCacheEntry(LocalDateTime.now(), value))
+            }
         }
     }
 
     /**
      * remove cache entry by key
      */
-    fun removeCacheEntry(key: K){
-        if(cache.containsKey(key)) {
-            cache.remove(key)
+    fun removeCacheEntry(key: K) {
+        synchronized(cache) {
+            if (cache.containsKey(key)) {
+                cache.remove(key)
+            }
         }
     }
 
@@ -55,20 +91,44 @@ class SimpleCacheImpl<K, V> {
      * get cache size
      */
     fun size(): Int {
-        return cache.size
+        synchronized(cache) {
+            return cache.size
+        }
     }
 
     /**
      * get entry live time
      */
-    fun timeToLive(): Long{
+    fun timeToLive(): Long {
         return timeToLive
     }
 
     /**
      * get read-only cache
      */
-    fun getCache(): Map<K, SimpleCacheEntry<V>>{
+    fun getCache(): Map<K, SimpleCacheEntry<V>> {
         return Collections.unmodifiableMap(LinkedHashMap<K, SimpleCacheEntry<V>>(cache))
+    }
+
+    fun cleanCache(){
+        synchronized(cache) {
+            cache.clear()
+        }
+    }
+
+    private fun cleanUpEntries() {
+        val now: LocalDateTime = LocalDateTime.now()
+        val keysToDelete: MutableList<K> = ArrayList()
+
+        synchronized(cache) {
+            val tmpMap: Map<K, SimpleCacheEntry<V>> = getCache()
+            tmpMap.entries.stream().forEach({ e ->
+                if (e.value.creationTime.plusSeconds(timeToLive).isBefore(now)) {
+                    keysToDelete.add(e.key)
+                }
+            })
+        }
+
+        keysToDelete.forEach({ e -> synchronized(cache) { cache.remove(e) } })
     }
 }

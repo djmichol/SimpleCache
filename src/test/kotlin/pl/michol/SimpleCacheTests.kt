@@ -8,14 +8,14 @@ class SimpleCacheTests {
 
     @Test
     fun initializationTest(){
-        var cahce = SimpleCacheImpl<Integer, String>(10,5)
-        Assert.assertEquals(0,cahce.size())
-        Assert.assertEquals(10, cahce.timeToLive())
+        val cache = SimpleCacheImpl<Integer, String>(10,2)
+        Assert.assertEquals(0,cache.size())
+        Assert.assertEquals(10, cache.timeToLive())
     }
 
     @Test
     fun maxEntriesTest(){
-        var cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10,2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         Assert.assertEquals(2, cache.size())
@@ -27,7 +27,7 @@ class SimpleCacheTests {
 
     @Test
     fun removeOldestWithoutGettingValuesEntriesTest(){
-        var cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10,2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         Assert.assertEquals("[1, 2]", cache.getCache().keys.toString())
@@ -39,7 +39,7 @@ class SimpleCacheTests {
 
     @Test
     fun removeOldestWithGettingValuesEntriesTest(){
-        var cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10,2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         cache.getCacheEntry(1)
@@ -53,7 +53,7 @@ class SimpleCacheTests {
 
     @Test
     fun removeCacheEntryTest(){
-        var cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10,2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         cache.removeCacheEntry(1)
@@ -65,4 +65,13 @@ class SimpleCacheTests {
         Assert.assertEquals("[2, 4]", cache.getCache().keys.toString())
     }
 
+    @Test
+    fun cleanCacheTest(){
+        val cache = SimpleCacheImpl<Int, String>(10,2)
+        cache.putCacheEntry(1, "1")
+        cache.putCacheEntry(2,"2")
+        Assert.assertEquals(2, cache.size())
+        cache.cleanCache()
+        Assert.assertEquals(0, cache.size())
+    }
 }
