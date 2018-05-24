@@ -1,21 +1,23 @@
 package pl.michol
 
 import org.junit.Assert
-import pl.michol.cache.SimpleCacheImpl
+import pl.michol.cache.impl.SimpleCacheImpl
+import java.nio.charset.StandardCharsets
+import java.util.*
 import kotlin.test.Test
 
 class SimpleCacheTests {
 
     @Test
     fun initializationTest(){
-        val cache = SimpleCacheImpl<Integer, String>(10,2)
+        val cache = SimpleCacheImpl<Integer, String>(10, 2)
         Assert.assertEquals(0,cache.size())
         Assert.assertEquals(10, cache.timeToLive())
     }
 
     @Test
     fun maxEntriesTest(){
-        val cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10, 2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         Assert.assertEquals(2, cache.size())
@@ -27,7 +29,7 @@ class SimpleCacheTests {
 
     @Test
     fun removeOldestWithoutGettingValuesEntriesTest(){
-        val cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10, 2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         Assert.assertEquals("[1, 2]", cache.getCache().keys.toString())
@@ -39,7 +41,7 @@ class SimpleCacheTests {
 
     @Test
     fun removeOldestWithGettingValuesEntriesTest(){
-        val cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10, 2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         cache.getCacheEntry(1)
@@ -53,7 +55,7 @@ class SimpleCacheTests {
 
     @Test
     fun removeCacheEntryTest(){
-        val cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10, 2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         cache.removeCacheEntry(1)
@@ -67,7 +69,7 @@ class SimpleCacheTests {
 
     @Test
     fun cleanCacheTest(){
-        val cache = SimpleCacheImpl<Int, String>(10,2)
+        val cache = SimpleCacheImpl<Int, String>(10, 2)
         cache.putCacheEntry(1, "1")
         cache.putCacheEntry(2,"2")
         Assert.assertEquals(2, cache.size())

@@ -1,12 +1,13 @@
-package pl.michol.cache
+package pl.michol.cache.impl
 
+import pl.michol.cache.SimpleCache
 import pl.michol.cache.models.SimpleCacheEntry
 import pl.michol.cache.models.SimpleCacheLinkedHashMap
 import java.time.LocalDateTime
 import java.util.*
 
 
-class SimpleCacheImpl<K, V> {
+class SimpleCacheImpl<K, V> : SimpleCache<K, V> {
 
     private val timeToLive: Long
     private val cache: SimpleCacheLinkedHashMap<K, SimpleCacheEntry<V>>
@@ -52,7 +53,7 @@ class SimpleCacheImpl<K, V> {
      * get cache entry by key
      * return null if key is not present
      */
-    fun getCacheEntry(key: K): V? {
+    override fun getCacheEntry(key: K): V? {
         synchronized(cache) {
             if (cache.containsKey(key)) {
                 return cache[key]!!.value
@@ -66,7 +67,7 @@ class SimpleCacheImpl<K, V> {
      * if value is present update value and entry creation time
      * if not present add new value
      */
-    fun putCacheEntry(key: K, value: V) {
+    override fun putCacheEntry(key: K, value: V) {
         synchronized(cache) {
             if (cache.containsKey(key)) {
                 cache.computeIfPresent(key, { _, u -> u.creationTime = LocalDateTime.now(); u.value = value; u })
@@ -79,7 +80,7 @@ class SimpleCacheImpl<K, V> {
     /**
      * remove cache entry by key
      */
-    fun removeCacheEntry(key: K) {
+    override fun removeCacheEntry(key: K) {
         synchronized(cache) {
             if (cache.containsKey(key)) {
                 cache.remove(key)
@@ -90,7 +91,7 @@ class SimpleCacheImpl<K, V> {
     /**
      * get cache size
      */
-    fun size(): Int {
+    override fun size(): Int {
         synchronized(cache) {
             return cache.size
         }
@@ -106,11 +107,11 @@ class SimpleCacheImpl<K, V> {
     /**
      * get read-only cache
      */
-    fun getCache(): Map<K, SimpleCacheEntry<V>> {
+    override fun getCache(): Map<K, SimpleCacheEntry<V>> {
         return Collections.unmodifiableMap(LinkedHashMap<K, SimpleCacheEntry<V>>(cache))
     }
 
-    fun cleanCache(){
+    override fun cleanCache() {
         synchronized(cache) {
             cache.clear()
         }
@@ -128,7 +129,6 @@ class SimpleCacheImpl<K, V> {
                 }
             })
         }
-
         keysToDelete.forEach({ e -> synchronized(cache) { cache.remove(e) } })
     }
 }

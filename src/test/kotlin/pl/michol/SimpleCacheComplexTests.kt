@@ -2,7 +2,7 @@ package pl.michol
 
 import org.junit.Assert
 import org.junit.Test
-import pl.michol.cache.SimpleCacheImpl
+import pl.michol.cache.impl.SimpleCacheImpl
 
 class SimpleCacheComplexTests{
 
