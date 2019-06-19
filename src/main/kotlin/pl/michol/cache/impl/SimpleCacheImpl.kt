@@ -123,12 +123,12 @@ class SimpleCacheImpl<K, V> : SimpleCache<K, V> {
 
         synchronized(cache) {
             val tmpMap: Map<K, SimpleCacheEntry<V>> = getCache()
-            tmpMap.entries.stream().forEach({ e ->
+            tmpMap.entries.stream().forEach { e ->
                 if (e.value.creationTime.plusSeconds(timeToLive).isBefore(now)) {
                     keysToDelete.add(e.key)
                 }
-            })
+            }
         }
-        keysToDelete.forEach({ e -> synchronized(cache) { cache.remove(e) } })
+        keysToDelete.forEach { e -> synchronized(cache) { cache.remove(e) } }
     }
 }

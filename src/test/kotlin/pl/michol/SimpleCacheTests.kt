@@ -2,8 +2,6 @@ package pl.michol
 
 import org.junit.Assert
 import pl.michol.cache.impl.SimpleCacheImpl
-import java.nio.charset.StandardCharsets
-import java.util.*
 import kotlin.test.Test
 
 class SimpleCacheTests {
